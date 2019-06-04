@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { MouseEvent } from '@agm/core';
+import { IMarker, DEFAULT_MARKERS, INITIAL_ZOOM, INITIAL_LAT, INITIAL_LNG } from './location-config';
 
 @Component({
   selector: 'bz-location',
@@ -7,13 +9,33 @@ import { Component, OnInit } from '@angular/core';
 })
 export class LocationComponent implements OnInit {
 
-  public title = 'My first AGM project';
-  public lat = 51.678418;
-  public lng = 7.809007;
+  public zoom = INITIAL_ZOOM;
+  public lat = INITIAL_LAT;
+  public lng = INITIAL_LNG;
+  public markers: IMarker[] = DEFAULT_MARKERS;
 
-  constructor() { }
+  constructor() {
+    console.log('LocationComponent => constructor');
+  }
 
   ngOnInit() {
+    console.log('LocationComponent => ngOnInit');
+  }
+
+  mapClickEvent($event: MouseEvent) {
+    this.markers.push({
+      lat: $event.coords.lat,
+      lng: $event.coords.lng,
+      draggable: true
+    });
+  }
+
+  clickedMarker(label: string, index: number) {
+    console.log(`clicked the marker: ${label || index}`)
+  }
+
+  markerDragEnd(m: IMarker, $event: MouseEvent) {
+    console.log('dragEnd', m, $event);
   }
 
 }
