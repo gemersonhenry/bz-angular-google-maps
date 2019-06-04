@@ -1,6 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { MouseEvent } from '@agm/core';
-import { IMarker, DEFAULT_MARKERS, INITIAL_ZOOM, INITIAL_LAT, INITIAL_LNG } from './location-config';
+import { MouseEvent, LatLngBounds, LatLng } from '@agm/core';
+import {
+  DEFAULT_MARKERS, INITIAL_ZOOM, INITIAL_LAT, INITIAL_LNG, MARKER_DOWN, MARKER_UP
+} from './location-config';
+import { Marker } from './location-model';
+
 
 @Component({
   selector: 'bz-location',
@@ -9,33 +13,54 @@ import { IMarker, DEFAULT_MARKERS, INITIAL_ZOOM, INITIAL_LAT, INITIAL_LNG } from
 })
 export class LocationComponent implements OnInit {
 
-  public zoom = INITIAL_ZOOM;
-  public lat = INITIAL_LAT;
-  public lng = INITIAL_LNG;
-  public markers: IMarker[] = DEFAULT_MARKERS;
+  public mapInstance;
+
+  public zoom: number = INITIAL_ZOOM;
+  public lat: number = INITIAL_LAT;
+  public lng: number = INITIAL_LNG;
+  public customMarker: Marker;
+  public markerImageUrl = MARKER_DOWN;
 
   constructor() {
-    console.log('LocationComponent => constructor');
   }
 
   ngOnInit() {
-    console.log('LocationComponent => ngOnInit');
-  }
-
-  mapClickEvent($event: MouseEvent) {
-    this.markers.push({
-      lat: $event.coords.lat,
-      lng: $event.coords.lng,
-      draggable: true
+    this.customMarker = new Marker({
+      lat: INITIAL_LAT,
+      lng: INITIAL_LNG,
+      draggable: false
     });
   }
 
-  clickedMarker(label: string, index: number) {
-    console.log(`clicked the marker: ${label || index}`)
+  public mapBoundsChangeEvent($event: LatLngBounds) {
+    if (this.markerImageUrl !== MARKER_UP) {
+      this.markerImageUrl = MARKER_UP;
+    }    
+    const centerJSON = $event.getCenter().toJSON();
+    this.customMarker.lat = centerJSON.lat;
+    this.customMarker.lng = centerJSON.lng;
   }
 
-  markerDragEnd(m: IMarker, $event: MouseEvent) {
-    console.log('dragEnd', m, $event);
+  public mapIdleEvent() {
+    console.log('idle');
+    this.markerImageUrl = MARKER_DOWN;
   }
 
+  public mapDragstartEvent() {
+    console.log('dragstart');
+  }
+
+  public mapDragendEvent() {
+    console.log('dragend');
+  }
+
+  public mapReadyEvent($event: any) {
+    this.mapInstance = $event;
+    this.mapInstance.addListener('dragstart', () => {
+      this.mapDragstartEvent();
+    });
+    this.mapInstance.addListener('dragend', () => {
+      this.mapDragendEvent();
+    });
+  }
 }
