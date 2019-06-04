@@ -1,19 +1,36 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { LatLngBounds } from '@agm/core';
+import { MVCObject } from '@agm/core/services/google-maps-types';
 
 import {
- INITIAL_ZOOM, INITIAL_LAT, INITIAL_LNG, MARKER_DOWN, MARKER_UP, DRAGSTART_EVENT, DRAGEND_EVENT
-} from './location-config';
-import { Marker } from './location-model';
+  INITIAL_ZOOM, INITIAL_LAT, INITIAL_LNG, MARKER_DOWN,
+  MARKER_UP, DRAGSTART_EVENT, DRAGEND_EVENT,
+} from './custom-agm-map.config';
+import { Marker } from './custom-agm-map.model';
+import { IParamsConfig } from './custom-agm-map.interface';
 
 @Component({
-  selector: 'bz-location',
-  templateUrl: './location.component.html',
-  styleUrls: ['./location.component.sass']
+  // tslint:disable-next-line: component-selector
+  selector: 'custom-agm-map',
+  templateUrl: './custom-agm-map.component.html',
+  styleUrls: ['./custom-agm-map.component.sass']
 })
-export class LocationComponent implements OnInit {
+export class CustomAgmMapComponent implements OnInit {
 
-  public mapInstance;
+  // tslint:disable-next-line: no-input-rename
+  @Input('paramsConfig')
+  public config: IParamsConfig;
+
+  @Output()
+  public idleEvent: EventEmitter<{}> = new EventEmitter();
+
+  @Output()
+  public dragstartEvent: EventEmitter<{}> = new EventEmitter();
+
+  @Output()
+  public dragendEvent: EventEmitter<{}> = new EventEmitter();
+
+  public mapInstance: MVCObject;
 
   public zoom: number = INITIAL_ZOOM;
   public lat: number = INITIAL_LAT;
@@ -54,9 +71,10 @@ export class LocationComponent implements OnInit {
     console.log('dragend');
   }
 
-  public mapReadyEvent(map: any) {
+  public mapReadyEvent(map: MVCObject) {
     this.mapInstance = map;
     this.mapInstance.addListener(DRAGSTART_EVENT, this.mapDragstartEvent);
     this.mapInstance.addListener(DRAGEND_EVENT, this.mapDragendEvent);
   }
+
 }

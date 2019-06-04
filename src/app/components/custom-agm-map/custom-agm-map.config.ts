@@ -1,4 +1,4 @@
-import { Marker } from './location-model';
+import { Marker } from './custom-agm-map.model';
 
 export const INITIAL_LAT = -12.0838224;
 export const INITIAL_LNG = -77.012051;

@@ -4,3 +4,9 @@ export interface IMarker {
   label?: string;
   draggable?: boolean;
 }
+
+export interface IParamsConfig {
+  zoom?: number;
+  lat?: number;
+  lng?: number;
+}
