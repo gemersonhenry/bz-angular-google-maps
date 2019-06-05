@@ -80,7 +80,7 @@ export class CustomAgmMapComponent implements OnInit, OnChanges {
     this.mapInstance.setOptions({
       center: { lat: INITIAL_LAT, lng: INITIAL_LNG },
       zoom: INITIAL_ZOOM,
-    })
+    });
   }
 
   public mapBoundsChangeEvent(latLng: LatLngBounds) {
