@@ -1,13 +1,13 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnChanges } from '@angular/core';
 import { LatLngBounds } from '@agm/core';
-import { MVCObject } from '@agm/core/services/google-maps-types';
 
 import {
   INITIAL_ZOOM, INITIAL_LAT, INITIAL_LNG, MARKER_DOWN,
   MARKER_UP, DRAGSTART_EVENT, DRAGEND_EVENT,
 } from './custom-agm-map.config';
 import { Marker } from './custom-agm-map.model';
-import { IParamsConfig } from './custom-agm-map.interface';
+import { IParamsConfig, IDataToEmit } from './custom-agm-map.interface';
+import { GoogleMap, LatLngLiteral } from '@agm/core/services/google-maps-types';
 
 @Component({
   // tslint:disable-next-line: component-selector
@@ -15,7 +15,7 @@ import { IParamsConfig } from './custom-agm-map.interface';
   templateUrl: './custom-agm-map.component.html',
   styleUrls: ['./custom-agm-map.component.sass']
 })
-export class CustomAgmMapComponent implements OnInit {
+export class CustomAgmMapComponent implements OnInit, OnChanges {
 
   // tslint:disable-next-line: no-input-rename
   @Input('paramsConfig')
@@ -30,22 +30,52 @@ export class CustomAgmMapComponent implements OnInit {
   @Output()
   public dragendEvent: EventEmitter<{}> = new EventEmitter();
 
-  public mapInstance: MVCObject;
 
   public zoom: number = INITIAL_ZOOM;
   public lat: number = INITIAL_LAT;
   public lng: number = INITIAL_LNG;
-  public customMarker: Marker;
-  public markerImageUrl = MARKER_DOWN;
+  public markerImageUrl: string = MARKER_DOWN;
+  public mapInstance: GoogleMap | null;
+  public customMarker = new Marker({
+    lat: this.lat,
+    lng: this.lng,
+  });
 
   constructor() {
   }
 
   ngOnInit() {
-    this.customMarker = new Marker({
-      lat: this.lat,
-      lng: this.lng,
-    });
+    console.log('ngOnInit');
+  }
+
+  ngOnChanges() {
+    if (this.mapInstance) {
+      console.log('ngOnChanges');
+    }
+  }
+
+  private get mapCenter(): LatLngLiteral {
+    const { mapInstance } = this;
+    return mapInstance.getCenter().toJSON();
+  }
+
+  private get dataToEmit(): IDataToEmit {
+    const { mapCenter } = this;
+    const e = {
+      mapCenter,
+    };
+    console.log('dataToEmit: ', e);
+    return e;
+  }
+
+  public setInitialConfiguration() {
+    console.log('setInitialConfiguration');
+    this.customMarker.lat = INITIAL_LAT;
+    this.customMarker.lng = INITIAL_LNG;
+    this.mapInstance.setOptions({
+      center: { lat: INITIAL_LAT, lng: INITIAL_LNG },
+      zoom: INITIAL_ZOOM,
+    })
   }
 
   public mapBoundsChangeEvent(latLng: LatLngBounds) {
@@ -59,19 +89,22 @@ export class CustomAgmMapComponent implements OnInit {
 
   // este evento se lanza despues que el 'dragend'
   public mapIdleEvent() {
-    console.log('idle');
     this.markerImageUrl = MARKER_DOWN;
+    const { dataToEmit } = this;
+    this.idleEvent.emit(dataToEmit);
   }
 
   public mapDragstartEvent() {
-    console.log('dragstart');
+    const { dataToEmit } = this;
+    this.dragstartEvent.emit(dataToEmit);
   }
 
   public mapDragendEvent() {
-    console.log('dragend');
+    const { dataToEmit } = this;
+    this.dragendEvent.emit(dataToEmit);
   }
 
-  public mapReadyEvent(map: MVCObject) {
+  public mapReadyEvent(map: GoogleMap) {
     this.mapInstance = map;
     this.mapInstance.addListener(DRAGSTART_EVENT, this.mapDragstartEvent);
     this.mapInstance.addListener(DRAGEND_EVENT, this.mapDragendEvent);
