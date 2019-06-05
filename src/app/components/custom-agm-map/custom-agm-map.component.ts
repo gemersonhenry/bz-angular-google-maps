@@ -22,14 +22,19 @@ export class CustomAgmMapComponent implements OnInit, OnChanges {
   public config: IParamsConfig;
 
   @Output()
-  public idleEvent: EventEmitter<{}> = new EventEmitter();
+  public boundsChangeEvent: EventEmitter<IDataToEmit> = new EventEmitter();
 
   @Output()
-  public dragstartEvent: EventEmitter<{}> = new EventEmitter();
+  public idleEvent: EventEmitter<IDataToEmit> = new EventEmitter();
 
   @Output()
-  public dragendEvent: EventEmitter<{}> = new EventEmitter();
+  public dragstartEvent: EventEmitter<IDataToEmit> = new EventEmitter();
 
+  @Output()
+  public dragendEvent: EventEmitter<IDataToEmit> = new EventEmitter();
+
+  @Output()
+  public readyEvent: EventEmitter<{}> = new EventEmitter();
 
   public zoom: number = INITIAL_ZOOM;
   public lat: number = INITIAL_LAT;
@@ -85,6 +90,8 @@ export class CustomAgmMapComponent implements OnInit, OnChanges {
     const { lat, lng } = latLng.getCenter().toJSON();
     this.customMarker.lat = lat;
     this.customMarker.lng = lng;
+    const { dataToEmit } = this;
+    this.boundsChangeEvent.emit(dataToEmit);
   }
 
   // este evento se lanza despues que el 'dragend'
@@ -105,6 +112,7 @@ export class CustomAgmMapComponent implements OnInit, OnChanges {
   }
 
   public mapReadyEvent(map: GoogleMap) {
+    this.readyEvent.emit({});
     this.mapInstance = map;
     this.mapInstance.addListener(DRAGSTART_EVENT, this.mapDragstartEvent);
     this.mapInstance.addListener(DRAGEND_EVENT, this.mapDragendEvent);
