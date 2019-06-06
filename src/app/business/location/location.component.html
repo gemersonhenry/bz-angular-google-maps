@@ -3,8 +3,8 @@
   [longitude]="lng"
   [zoom]="zoom"
   [disableDefaultUI]="false"
-  [zoomControl]="true"
-  [panControl]="true"
+  [zoomControl]="false"
+  [panControl]="false"
   (idle)="mapIdleEvent()"
   (mapReady)="mapReadyEvent($event)"
   (boundsChange)="mapBoundsChangeEvent($event)">

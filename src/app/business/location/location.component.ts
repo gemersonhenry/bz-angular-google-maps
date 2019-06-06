@@ -2,9 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { LatLngBounds } from '@agm/core';
 
 import {
- INITIAL_ZOOM, INITIAL_LAT, INITIAL_LNG, MARKER_DOWN, MARKER_UP, DRAGSTART_EVENT, DRAGEND_EVENT
+ INITIAL_ZOOM, INITIAL_LAT, INITIAL_LNG, MARKER_DOWN,
+ MARKER_UP, DRAGSTART_EVENT, DRAGEND_EVENT,
 } from './location-config';
 import { Marker } from './location-model';
+import { GoogleMap } from '@agm/core/services/google-maps-types';
 
 @Component({
   selector: 'bz-location',
@@ -13,7 +15,7 @@ import { Marker } from './location-model';
 })
 export class LocationComponent implements OnInit {
 
-  public mapInstance;
+  public mapInstance: GoogleMap;
 
   public zoom: number = INITIAL_ZOOM;
   public lat: number = INITIAL_LAT;
@@ -32,9 +34,6 @@ export class LocationComponent implements OnInit {
   }
 
   public mapBoundsChangeEvent(latLng: LatLngBounds) {
-    if (this.markerImageUrl !== MARKER_UP) {
-      this.markerImageUrl = MARKER_UP;
-    }
     const { lat, lng } = latLng.getCenter().toJSON();
     this.customMarker.lat = lat;
     this.customMarker.lng = lng;
@@ -48,6 +47,7 @@ export class LocationComponent implements OnInit {
 
   public mapDragstartEvent() {
     console.log('dragstart');
+    this.markerImageUrl = MARKER_UP;
   }
 
   public mapDragendEvent() {

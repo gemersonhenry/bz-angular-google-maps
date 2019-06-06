@@ -1,13 +1,12 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { LatLngBounds } from '@agm/core';
+import { GoogleMap } from '@agm/core/services/google-maps-types';
 
 import {
-  INITIAL_ZOOM, INITIAL_LAT, INITIAL_LNG, MARKER_DOWN,
-  MARKER_UP, DRAGSTART_EVENT, DRAGEND_EVENT,
+  INITIAL_ZOOM, INITIAL_LAT, INITIAL_LNG, MARKER_DOWN, MARKER_UP,
 } from './custom-agm-map.config';
-import { Marker } from './custom-agm-map.model';
-import { IParamsConfig, IDataToEmit } from './custom-agm-map.interface';
-import { GoogleMap, LatLngLiteral } from '@agm/core/services/google-maps-types';
+import { Marker, MapStoreService } from './custom-agm-map.model';
+import { IParamsConfig, IDataToEmit, IMarker } from './custom-agm-map.interface';
 
 @Component({
   // tslint:disable-next-line: component-selector
@@ -15,10 +14,9 @@ import { GoogleMap, LatLngLiteral } from '@agm/core/services/google-maps-types';
   templateUrl: './custom-agm-map.component.html',
   styleUrls: ['./custom-agm-map.component.sass']
 })
-export class CustomAgmMapComponent implements OnInit, OnChanges {
+export class CustomAgmMapComponent {
 
-  // tslint:disable-next-line: no-input-rename
-  @Input('paramsConfig')
+  @Input()
   public config: IParamsConfig;
 
   @Output()
@@ -28,94 +26,59 @@ export class CustomAgmMapComponent implements OnInit, OnChanges {
   public idleEvent: EventEmitter<IDataToEmit> = new EventEmitter();
 
   @Output()
-  public dragstartEvent: EventEmitter<IDataToEmit> = new EventEmitter();
-
-  @Output()
-  public dragendEvent: EventEmitter<IDataToEmit> = new EventEmitter();
-
-  @Output()
   public readyEvent: EventEmitter<{}> = new EventEmitter();
 
-  public zoom: number = INITIAL_ZOOM;
-  public lat: number = INITIAL_LAT;
-  public lng: number = INITIAL_LNG;
   public markerImageUrl: string = MARKER_DOWN;
-  public mapInstance: GoogleMap | null;
-  public customMarker = new Marker({
-    lat: this.lat,
-    lng: this.lng,
-  });
+  public customMarker: Marker = {} as Marker;
+  public lat: number;
+  public lng: number;
+  public zoom: number;
 
-  constructor() {
-  }
-
-  ngOnInit() {
-    console.log('ngOnInit');
-  }
-
-  ngOnChanges() {
-    if (this.mapInstance) {
-      console.log('ngOnChanges');
-    }
-  }
-
-  private get mapCenter(): LatLngLiteral {
-    const { mapInstance } = this;
-    return mapInstance.getCenter().toJSON();
-  }
+  constructor(
+    public mapStoreService: MapStoreService,
+  ) {}
 
   private get dataToEmit(): IDataToEmit {
-    const { mapCenter } = this;
+    const { mapLat, mapLng, mapCenter } = this.mapStoreService;
     const e = {
-      mapCenter,
+      mapCenter: {
+        lat: mapLat, lng: mapLng,
+        center: mapCenter,
+      }
     };
-    console.log('dataToEmit: ', e);
     return e;
   }
 
   public setInitialConfiguration() {
-    console.log('setInitialConfiguration');
-    this.customMarker.lat = INITIAL_LAT;
-    this.customMarker.lng = INITIAL_LNG;
-    this.mapInstance.setOptions({
-      center: { lat: INITIAL_LAT, lng: INITIAL_LNG },
-      zoom: INITIAL_ZOOM,
+    this.customMarker = new Marker({
+      lat: INITIAL_LAT,
+      lng: INITIAL_LNG,
     });
+    this.lat = INITIAL_LAT;
+    this.lng = INITIAL_LNG;
+    this.zoom = INITIAL_ZOOM;
   }
 
+  // this event is triggered each time the map moves
   public mapBoundsChangeEvent(latLng: LatLngBounds) {
     if (this.markerImageUrl !== MARKER_UP) {
       this.markerImageUrl = MARKER_UP;
     }
-    const { lat, lng } = latLng.getCenter().toJSON();
-    this.customMarker.lat = lat;
-    this.customMarker.lng = lng;
-    const { dataToEmit } = this;
-    this.boundsChangeEvent.emit(dataToEmit);
+    this.customMarker = new Marker(latLng.getCenter().toJSON() as IMarker);
+    this.boundsChangeEvent.emit(this.dataToEmit);
   }
 
-  // este evento se lanza despues que el 'dragend'
+  // this event is triggered each time the map is stopped
   public mapIdleEvent() {
     this.markerImageUrl = MARKER_DOWN;
-    const { dataToEmit } = this;
-    this.idleEvent.emit(dataToEmit);
+    this.idleEvent.emit(this.dataToEmit);
   }
 
-  public mapDragstartEvent() {
-    const { dataToEmit } = this;
-    this.dragstartEvent.emit(dataToEmit);
-  }
-
-  public mapDragendEvent() {
-    const { dataToEmit } = this;
-    this.dragendEvent.emit(dataToEmit);
-  }
-
+  // this event is triggered only once after map is loaded
   public mapReadyEvent(map: GoogleMap) {
     this.readyEvent.emit({});
-    this.mapInstance = map;
-    this.mapInstance.addListener(DRAGSTART_EVENT, this.mapDragstartEvent);
-    this.mapInstance.addListener(DRAGEND_EVENT, this.mapDragendEvent);
+    this.mapStoreService.map = map;
+    this.setInitialConfiguration();
   }
 
 }
